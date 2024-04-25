@@ -15,7 +15,9 @@ headers = {
 global bestbuy_product_price, walmart_product_price, newegg_product_price
 
 def fetch_data_from_bestbuy(product_name):
+    encoded_product_name = urllib.parse.quote_plus(product_name[:90])
     url = f"https://www.bestbuy.com/site/searchpage.jsp?st={encoded_product_name}&intl=nosplash"
+    print(url)
 
     try:
         page_to_scrape = requests.get(url, headers=headers)
@@ -23,16 +25,16 @@ def fetch_data_from_bestbuy(product_name):
         # Check if the request was successful
         if page_to_scrape.status_code == 200:
             soup = BeautifulSoup(page_to_scrape.text, "html.parser")
+            # print()
+            # print(page_to_scrape.text)
             prices = soup.find_all("span", attrs={"aria-hidden": "true"}, string=re.compile(r'^\$'))
-
-            try:
-                if prices:
-                    bestbuy_product_price = prices[0].text
-                    print("product price is: " + str(bestbuy_product_price))
-                    # for price in prices:
-                    #     print(price.text)
-            except IndexError as e:
-                    print(f"An error occurred while searching for the product: {e}")
+            if prices:
+                bestbuy_product_price = prices[0].text
+                print("product price is: " + str(bestbuy_product_price))
+                # for price in prices:
+                #     print(price.text)
+            else:
+                print("No products found in search results.")
     except requests.RequestException as e:
         print(f"An error occurred while fetching the webpage: {e}")
 
@@ -100,9 +102,11 @@ def test_fetch_data_from_bestbuy(product_name):
 
 # Example usage:
 product_name = "Sony XR85X93L 85\" 4K Mini LED Smart Google TV with PS5 Features (2023)"
+# product_name = "HP - Envy 2-in-1 14\" Full HD Touch-Screen Laptop - Intel Core 7 - 16GB Memory - 512GB SSD -Natural Silver"
+# product_name = "Sony - WF-C700N Truly Wireless Noise Canceling In-Ear Headphones - Sage"
 encoded_product_name = urllib.parse.quote_plus(product_name)
 
-data_from_bestbuy = fetch_data_from_bestbuy(encoded_product_name)
+data_from_bestbuy = fetch_data_from_bestbuy(product_name)
 # data_from_walmart = fetch_data_from_walmart(encoded_product_name)
 # data_from_newegg = fetch_data_from_newegg(encoded_product_name)
 # test_fetch_data_from_bestbuy(product_name)
