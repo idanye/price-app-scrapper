@@ -2,9 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import urllib
 import re
-# from selenium import webdriver
-# from selenium.webdriver.common.by import By
-# from selenium.webdriver.chrome.service import Service
+
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux i686; rv:110.0) Gecko/20100101 Firefox/110.0.',
@@ -37,18 +35,30 @@ def fetch_data_from_bestbuy(product_name):
 
 def fetch_data_from_walmart(product_name):
     url = f"https://www.walmart.com/search?q={encoded_product_name}"
-    print(url)
-
+    print("walmart url" + url)
     try:
         page_to_scrape = requests.get(url, headers=headers)
 
         # Check if the request was successful
         if page_to_scrape.status_code == 200:
             soup = BeautifulSoup(page_to_scrape.text, "html.parser")
-            price_text = soup.find('div', class_='mr1 mr2-xl b black green lh-copy f5 f4-l', attrs={"aria-hidden": "true"})
-            price_text = price_text.text[3:]
-            # Insert a dot before the last two characters
-            walmart_product_price = f"{price_text[:-2]}.{price_text[-2:]}"
+            # price_elements = soup.find_all('div', class_='mr1 mr2-xl b black green lh-copy f5 f4-l', attrs={"aria-hidden": "true"})
+            price_elements = soup.find_all('span', class_="w_iUH7")
+            #class="mr1 mr2-xl b black lh-copy f5 f4-l"
+
+        # if we want to extract the first products price in the html
+            if (price_elements):
+                 for price in price_elements:
+                     print(price.text)
+                 price_text = price_elements[1].text[3:]
+                 walmart_product_price = f"{price_text[:-2]}.{price_text[-2:]}"
+
+        # if we want to extract the second products price in the html but this is the result according to find() 
+            # price_text = soup.find('div', class_='mr1 mr2-xl b black green lh-copy f5 f4-l', attrs={"aria-hidden": "true"})
+            # print("price etract befor slicing: " + price_text.text)
+            # price_text = price_text.text[3:]
+            # # Insert a dot before the last two characters
+            # walmart_product_price = f"{price_text[:-2]}.{price_text[-2:]}"
 
             if walmart_product_price:
                 print("walmart's product price is: " + str(walmart_product_price))
@@ -62,20 +72,22 @@ def fetch_data_from_walmart(product_name):
 
 
 def fetch_data_from_newegg(product_name):
-    url = f"https://www.newegg.com/p/pl?d={encoded_product_name}"
-    print(url)
-
+    encoded = urllib.parse.quote_plus(product_name)
+    # Manually replace the encoded characters for parentheses and double quotes if needed
+    encoded_product_name = encoded.replace('%28', '(').replace('%29', ')')
+    url = f"https://www.newegg.com/p/pl?d={encoded_product_name}&intl=nosplash" #"
     page_to_scrape = requests.get(url, headers=headers)
 
     # Check if the request was successful
     if page_to_scrape.status_code == 200:
         print("Successfully fetched the webpage")
         soup = BeautifulSoup(page_to_scrape.text, "html.parser")
-        prices = soup.find_all("div", class_="priceView-hero-price priceView-customer-price", attrs={"data-testid": "customer-price"})
+        print(soup)
+        prices = soup.find_all("span", class_="price-current-label")
         if prices:
             # Extract the price text from the first price container found
-            first_price = prices[0].find("span", attrs={"aria-hidden": "true"}).get_text().strip()
-            print(f"Price of the first product: {first_price}")
+            newegg_product_price = prices[0].text
+            print("newegg's product price is: " + str(newegg_product_price))
         else:
             print("No products found in search results.")
     else:
@@ -83,15 +95,16 @@ def fetch_data_from_newegg(product_name):
 
 
 # Example usage:
-#product_name = "Sony XR85X93L 85\" 4K Mini LED Smart Google TV with PS5 Features (2023)"
+product_name = "Sony XR85X93L 85\" 4K Mini LED Smart Google TV with PS5 Features (2023)"
 #product_name = "HP - Envy 2-in-1 14\" Full HD Touch-Screen Laptop - Intel Core 7 - 16GB Memory - 512GB SSD -Natural Silver"
-product_name = "Sony - WF-C700N Truly Wireless Noise Canceling In-Ear Headphones - Sage"
+# product_name = "Sony - WF-C700N Truly Wireless Noise Canceling In-Ear Headphones - Sage"
+#product_name = "Barakkat Rouge 540 by Fragrance World EDP Spray 3.4 oz For Women"
 
 encoded_product_name = urllib.parse.quote_plus(product_name)
 
 # data_from_bestbuy = fetch_data_from_bestbuy(product_name)
-data_from_walmart = fetch_data_from_walmart(encoded_product_name)
-# data_from_newegg = fetch_data_from_newegg(encoded_product_name)
+#data_from_walmart = fetch_data_from_walmart(encoded_product_name)
+data_from_newegg = fetch_data_from_newegg(product_name)
 
 
 print("Script ended")
