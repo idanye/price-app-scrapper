@@ -75,21 +75,25 @@ def fetch_data_from_newegg(product_name):
     encoded = urllib.parse.quote_plus(product_name)
     # Manually replace the encoded characters for parentheses and double quotes if needed
     encoded_product_name = encoded.replace('%28', '(').replace('%29', ')')
-    url = f"https://www.newegg.com/p/pl?d={encoded_product_name}&intl=nosplash" #"
+    url = f"https://www.newegg.com/p/pl?d={encoded_product_name}&intl=nosplash"
     page_to_scrape = requests.get(url, headers=headers)
 
     # Check if the request was successful
     if page_to_scrape.status_code == 200:
         print("Successfully fetched the webpage")
-        soup = BeautifulSoup(page_to_scrape.text, "html.parser")
-        print(soup)
-        prices = soup.find_all("span", class_="price-current-label")
-        if prices:
-            # Extract the price text from the first price container found
-            newegg_product_price = prices[0].text
-            print("newegg's product price is: " + str(newegg_product_price))
+        # Find the HTML element representing the first product listing
+        soup = BeautifulSoup(page_to_scrape.text, "html.parser")        
+        product_link = soup.find('div', class_='item-container').find('a')['href']
+        product_page_response = requests.get(product_link, headers=headers)
+        
+        if product_page_response.status_code == 200:
+            soup = BeautifulSoup(product_page_response.text, "html.parser")
+            product_price = soup.find('li', class_='price-current')
+            print(product_price.text)
         else:
-            print("No products found in search results.")
+            print("product does not found in newegg")
+
+
     else:
         print("Failed to fetch the webpage")
 
