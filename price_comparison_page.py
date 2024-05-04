@@ -76,23 +76,29 @@ def fetch_data_from_newegg(product_name):
     # Manually replace the encoded characters for parentheses and double quotes if needed
     encoded_product_name = encoded.replace('%28', '(').replace('%29', ')')
     url = f"https://www.newegg.com/p/pl?d={encoded_product_name}&intl=nosplash"
+    print(url)
     page_to_scrape = requests.get(url, headers=headers)
 
     # Check if the request was successful
     if page_to_scrape.status_code == 200:
         print("Successfully fetched the webpage")
         # Find the HTML element representing the first product listing
-        soup = BeautifulSoup(page_to_scrape.text, "html.parser")        
-        product_link = soup.find('div', class_='item-container').find('a')['href']
-        product_page_response = requests.get(product_link, headers=headers)
+        soup = BeautifulSoup(page_to_scrape.text, "html.parser")  
         
-        if product_page_response.status_code == 200:
-            soup = BeautifulSoup(product_page_response.text, "html.parser")
-            product_price = soup.find('li', class_='price-current')
-            print(product_price.text)
+        error_message = soup.find("span", class_='result-message-error')
+        if error_message is not None:
+            print("found 0 items that match: " + product_name)
         else:
-            print("product does not found in newegg")
-
+            product_link = soup.find('div', class_='item-container').find('a')['href']
+            product_page_response = requests.get(product_link, headers=headers)
+            print(product_link)
+        
+            if product_page_response.status_code == 200:
+                soup = BeautifulSoup(product_page_response.text, "html.parser")
+                product_price = soup.find('li', class_='price-current')
+                print(product_price.text)
+            else:
+                print("product does not found in newegg")
 
     else:
         print("Failed to fetch the webpage")
@@ -101,7 +107,7 @@ def fetch_data_from_newegg(product_name):
 # Example usage:
 product_name = "Sony XR85X93L 85\" 4K Mini LED Smart Google TV with PS5 Features (2023)"
 #product_name = "HP - Envy 2-in-1 14\" Full HD Touch-Screen Laptop - Intel Core 7 - 16GB Memory - 512GB SSD -Natural Silver"
-# product_name = "Sony - WF-C700N Truly Wireless Noise Canceling In-Ear Headphones - Sage"
+#product_name = "Sony - WF-C700N Truly Wireless Noise Canceling In-Ear Headphones - Sage"
 #product_name = "Barakkat Rouge 540 by Fragrance World EDP Spray 3.4 oz For Women"
 
 encoded_product_name = urllib.parse.quote_plus(product_name)
@@ -110,5 +116,3 @@ encoded_product_name = urllib.parse.quote_plus(product_name)
 #data_from_walmart = fetch_data_from_walmart(encoded_product_name)
 data_from_newegg = fetch_data_from_newegg(product_name)
 
-
-print("Script ended")
