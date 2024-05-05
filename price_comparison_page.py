@@ -35,40 +35,32 @@ def fetch_data_from_bestbuy(product_name):
 
 def fetch_data_from_walmart(product_name):
     url = f"https://www.walmart.com/search?q={encoded_product_name}"
-    print("walmart url" + url)
+    print(url)
     try:
         page_to_scrape = requests.get(url, headers=headers)
 
-        # Check if the request was successful
         if page_to_scrape.status_code == 200:
             soup = BeautifulSoup(page_to_scrape.text, "html.parser")
-            # price_elements = soup.find_all('div', class_='mr1 mr2-xl b black green lh-copy f5 f4-l', attrs={"aria-hidden": "true"})
-            price_elements = soup.find_all('span', class_="w_iUH7")
-            #class="mr1 mr2-xl b black lh-copy f5 f4-l"
+            error_message = soup.find('div', class_='tc fw7 f-subheadline-m mb4 f1') # does not find the product
+            #print(soup)
 
-        # if we want to extract the first products price in the html
-            if (price_elements):
-                 for price in price_elements:
-                     print(price.text)
-                 price_text = price_elements[1].text[3:]
-                 walmart_product_price = f"{price_text[:-2]}.{price_text[-2:]}"
-
-        # if we want to extract the second products price in the html but this is the result according to find() 
-            # price_text = soup.find('div', class_='mr1 mr2-xl b black green lh-copy f5 f4-l', attrs={"aria-hidden": "true"})
-            # print("price etract befor slicing: " + price_text.text)
-            # price_text = price_text.text[3:]
-            # # Insert a dot before the last two characters
-            # walmart_product_price = f"{price_text[:-2]}.{price_text[-2:]}"
-
-            if walmart_product_price:
-                print("walmart's product price is: " + str(walmart_product_price))
+            if error_message is not None:
+                print("Walmart found 0 items that match: " + product_name)
             else:
-                print("No products found in search results.")
+                product_link = soup.find('div', class_='h-100 pb1-xl pr4-xl pv1 ph1', attrs={"style":"contain-intrinsic-size:198px 340px"}).find('a')['href']
+                product_page_response = requests.get(product_link, headers=headers)
+                #print(product_link)
+            
+                if product_page_response.status_code == 200:
+                    soup = BeautifulSoup(product_page_response.text, "html.parser")
+                    price_text = soup.find('span', attrs={"itemprop":"price", "aria-hidden": "false"})
+                    walmart_product_price = price_text.text.strip()
+                    print("walamart's price: " + walmart_product_price)
+                else:
+                    print("product does not found in Walmart")
+
     except requests.RequestException as e:
-        print(f"An error occurred while fetching the webpage: {e}")    
-
-    #prices = soup.find_all("div", class_="priceView-hero-price priceView-customer-price", attrs={"data-testid": "customer-price"})
-
+        print(f"An error occurred while fetching the webpage: {e}") 
 
 
 def fetch_data_from_newegg(product_name):
@@ -84,10 +76,10 @@ def fetch_data_from_newegg(product_name):
         print("Successfully fetched the webpage")
         # Find the HTML element representing the first product listing
         soup = BeautifulSoup(page_to_scrape.text, "html.parser")  
-        
         error_message = soup.find("span", class_='result-message-error')
+
         if error_message is not None:
-            print("found 0 items that match: " + product_name)
+            print("newegg found 0 items that match: " + product_name)
         else:
             product_link = soup.find('div', class_='item-container').find('a')['href']
             product_page_response = requests.get(product_link, headers=headers)
@@ -109,10 +101,11 @@ product_name = "Sony XR85X93L 85\" 4K Mini LED Smart Google TV with PS5 Features
 #product_name = "HP - Envy 2-in-1 14\" Full HD Touch-Screen Laptop - Intel Core 7 - 16GB Memory - 512GB SSD -Natural Silver"
 #product_name = "Sony - WF-C700N Truly Wireless Noise Canceling In-Ear Headphones - Sage"
 #product_name = "Barakkat Rouge 540 by Fragrance World EDP Spray 3.4 oz For Women"
+#product_name = "33234454"
 
 encoded_product_name = urllib.parse.quote_plus(product_name)
 
-# data_from_bestbuy = fetch_data_from_bestbuy(product_name)
-#data_from_walmart = fetch_data_from_walmart(encoded_product_name)
-data_from_newegg = fetch_data_from_newegg(product_name)
+#data_from_bestbuy = fetch_data_from_bestbuy(product_name)
+data_from_walmart = fetch_data_from_walmart(encoded_product_name)
+#data_from_newegg = fetch_data_from_newegg(product_name)
 
