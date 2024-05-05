@@ -34,6 +34,12 @@ def fetch_data_from_bestbuy(product_name):
 
 
 def fetch_data_from_walmart(product_name):
+    headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+    }
+
     url = f"https://www.walmart.com/search?q={encoded_product_name}"
     print(url)
     try:
@@ -97,8 +103,8 @@ def fetch_data_from_newegg(product_name):
 
 
 # Example usage:
-product_name = "Sony XR85X93L 85\" 4K Mini LED Smart Google TV with PS5 Features (2023)"
-#product_name = "HP - Envy 2-in-1 14\" Full HD Touch-Screen Laptop - Intel Core 7 - 16GB Memory - 512GB SSD -Natural Silver"
+#product_name = "Sony XR85X93L 85\" 4K Mini LED Smart Google TV with PS5 Features (2023)"
+product_name = "HP - Envy 2-in-1 14\" Full HD Touch-Screen Laptop - Intel Core 7 - 16GB Memory - 512GB SSD -Natural Silver"
 #product_name = "Sony - WF-C700N Truly Wireless Noise Canceling In-Ear Headphones - Sage"
 #product_name = "Barakkat Rouge 540 by Fragrance World EDP Spray 3.4 oz For Women"
 #product_name = "33234454"
