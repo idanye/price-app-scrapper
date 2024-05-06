@@ -1,5 +1,9 @@
-from fastapi import FastAPI, HTTPException
+import traceback
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 import requests
 from bs4 import BeautifulSoup
 import urllib.parse
@@ -12,25 +16,59 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins for localhost:3000
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
 headers = {
-    'User-Agent': 'Mozilla/5.0 (X11; Linux i686; rv:110.0) Gecko/20100101 Firefox/110.0.',
+    'User-Agent': 'Mozilla/5.0 (X11; Linux i686; rv:110.0) Gecko/20100101 Firefox/110.0. (compatible; FastAPI)',
     'Accept-Language': 'en-US,en;q=0.5'
 }
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"Request path: {request.url.path}, Request headers: {request.headers}")
+    response = await call_next(request)
+    logger.info(f"Response headers: {response.headers}")
+    return response
+
+
+@app.get("/test")
+async def test_endpoint():
+    response = JSONResponse(content={"message": "This is a test response"})
+    return response
+
 
 @app.get("/prices/{product_name:path}")
 async def get_prices(product_name: str):
     logger.info(f"Fetching prices for: {product_name}")
 
-    bestbuy_price = fetch_data_from_bestbuy(product_name)
-    walmart_price = fetch_data_from_walmart(product_name)  # Ensure you handle encoding inside the function
-    newegg_price = fetch_data_from_newegg(product_name)
+    try:
+        bestbuy_price = fetch_data_from_bestbuy(product_name)
+        logger.info(f"BestBuy price fetched: {bestbuy_price}")
 
-    return jsonable_encoder({
-        "product_name": product_name,
-        "BestBuy": bestbuy_price,
-        "Walmart": walmart_price,
-        "Newegg": newegg_price
-    })
+        walmart_price = fetch_data_from_walmart(product_name)  # Ensure you handle encoding inside the function
+        logger.info(f"Walmart price fetched: {walmart_price}")
+
+        newegg_price = fetch_data_from_newegg(product_name)
+        logger.info(f"Newegg price fetched: {newegg_price}")
+
+        return jsonable_encoder({
+            "product_name": product_name,
+            "BestBuy": bestbuy_price,
+            "Walmart": walmart_price,
+            "Newegg": newegg_price
+        })
+
+    except Exception as e:
+        logger.error(f"Error fetching prices: {e}")
+        traceback.print_exc()  # This will print the full traceback to the log
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 
 def fetch_data_from_bestbuy(product_name):
@@ -131,4 +169,3 @@ def fetch_data_from_newegg(product_name):
 #product_name = "Sony - WF-C700N Truly Wireless Noise Canceling In-Ear Headphones - Sage"
 #product_name = "Barakkat Rouge 540 by Fragrance World EDP Spray 3.4 oz For Women"
 #product_name = "33234454"
-

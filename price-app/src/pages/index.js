@@ -10,9 +10,13 @@ export default function Home() {
   const handleSearch = async () => {
     setLoading(true);
     setError('');
+    const sanitizedProductName = productName.replace(/[\u201C\u201D]/g, ''); // Strip typographic quotes
+    console.log(`Requesting prices for: ${sanitizedProductName}`);  // Log the sanitized product name
+
     try {
-      const response = await axios.get(`http://localhost:8000/prices/${encodeURIComponent(productName)}`);
+      const response = await axios.get(`http://localhost:8000/prices/${encodeURIComponent(sanitizedProductName)}`);
       setResults(response.data);
+      console.log('Response:', response.data);
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('Failed to fetch data. Please try again.');
@@ -48,27 +52,21 @@ export default function Home() {
             </tr>
           </thead>
           <tbody>
-            {results.BestBuy && (
-              <tr>
-                <td>BestBuy</td>
-                <td>{results.BestBuy.price || 'Not available'}</td>
-                <td>{results.BestBuy.url ? <a href={results.BestBuy.url} target="_blank" rel="noopener noreferrer">Product Link</a> : 'N/A'}</td>
-              </tr>
-            )}
-            {results.Walmart && (
-              <tr>
-                <td>Walmart</td>
-                <td>{results.Walmart.price || 'Not available'}</td>
-                <td>{results.Walmart.url ? <a href={results.Walmart.url} target="_blank" rel="noopener noreferrer">Product Link</a> : 'N/A'}</td>
-              </tr>
-            )}
-            {results.Newegg && (
-              <tr>
-                <td>Newegg</td>
-                <td>{results.Newegg.price || 'Not available'}</td>
-                <td>{results.Newegg.url ? <a href={results.Newegg.url} target="_blank" rel="noopener noreferrer">Product Link</a> : 'N/A'}</td>
-              </tr>
-            )}
+            <tr>
+              <td>BestBuy</td>
+              <td>{results.BestBuy || 'Not available'}</td>
+              <td>N/A</td>
+            </tr>
+            <tr>
+              <td>Walmart</td>
+              <td>{results.Walmart || 'Not available'}</td>
+              <td>N/A</td>
+            </tr>
+            <tr>
+              <td>Newegg</td>
+              <td>{results.Newegg || 'Not available'}</td>
+              <td>N/A</td>
+            </tr>
           </tbody>
         </table>
       )}
