@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import styles from '../styles/styles.module.css'; // Assume styles are defined in this CSS file
 
 export default function Home() {
   const [productName, setProductName] = useState('');
@@ -27,46 +28,44 @@ export default function Home() {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className={styles.container}>
       <h1>Product Price Finder</h1>
-      <input
-        type="text"
-        placeholder="Enter product name"
-        value={productName}
-        onChange={(e) => setProductName(e.target.value)}
-        style={{ marginRight: '10px', width: '300px' }}
-      />
-      <button onClick={handleSearch} disabled={loading}>
-        {loading ? 'Loading...' : 'Search'}
-      </button>
+      <div className={styles.searchBar}>
+        <input
+            type="text"
+            className={styles.inputText}
+            placeholder="Enter product name"
+            value={productName}
+            onChange={(e) => setProductName(e.target.value)}
+        />
+        <button
+            className={loading ? styles.buttonDisabled : styles.button}
+            onClick={handleSearch}
+            disabled={loading}
+        >
+            {loading ? 'Loading...' : 'Search'}
+        </button>
+      </div>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className={styles.error}>{error}</p>}
 
       {results && (
-        <table border="1" style={{ marginTop: '20px', width: '100%' }}>
+        <table className={styles.table}>
           <thead>
             <tr>
-              <th>Store</th>
-              <th>Price</th>
-              <th>Link</th>
+              <th className={styles.th}>Store</th>
+              <th className={styles.th}>Price</th>
+              <th className={styles.th}>Link</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>BestBuy</td>
-              <td>{results.BestBuy || 'Not available'}</td>
-              <td>N/A</td>
-            </tr>
-            <tr>
-              <td>Walmart</td>
-              <td>{results.Walmart || 'Not available'}</td>
-              <td>N/A</td>
-            </tr>
-            <tr>
-              <td>Newegg</td>
-              <td>{results.Newegg || 'Not available'}</td>
-              <td>N/A</td>
-            </tr>
+            {Object.keys(results).map(store => (
+              <tr key={store}>
+                <td className={styles.td}>{store}</td>
+                <td className={styles.td}>{results[store].price || 'Not available'}</td>
+                <td className={styles.td}>{results[store].link ? <a className={styles.link} href={results[store].link}>Product Link</a> : 'N/A'}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       )}

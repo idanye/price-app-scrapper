@@ -1,0 +1,52 @@
+.container {
+  width: 80%;
+  margin: auto;
+  padding: 20px;
+}
+
+.searchBar {
+  display: flex;
+  justify-content: space-between;
+}
+
+.inputText {
+  width: 70%;
+  padding: 10px;
+  margin-right: 10px;
+}
+
+.button {
+  padding: 10px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.buttonDisabled {
+  background-color: #ccc;
+}
+
+.error {
+  color: red;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.th {
+  background-color: #f2f2f2;
+}
+
+.td {
+  border: 1px solid #ddd;
+  text-align: left;
+  padding: 8px;
+}
+
+.link {
+  color: #007BFF;
+}

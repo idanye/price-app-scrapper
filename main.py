@@ -1,5 +1,4 @@
 import traceback
-
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
@@ -7,6 +6,7 @@ from fastapi.responses import JSONResponse
 import requests
 from bs4 import BeautifulSoup
 import urllib.parse
+from urllib.parse import urljoin
 import re
 import logging
 
@@ -77,20 +77,23 @@ def fetch_data_from_bestbuy(product_name):
     logger.info(f"BestBuy URL: {url}")
 
     try:
-        page_to_scrape = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers)
 
-        # Check if the request was successful
-        if page_to_scrape.status_code == 200:
-            soup = BeautifulSoup(page_to_scrape.text, "html.parser")
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, "html.parser")
             price = soup.find("span", attrs={"aria-hidden": "true"}, string=re.compile(r'^\$'))
-            if price:
-                return price.text
+            link = soup.find('a', class_='link')
+            product_container = soup.find('div', class_='sku-item')  # Hypothetical container class
+            link = product_container.find('a', href=True) if product_container else None
+            product_link = urljoin(url, link['href']) if link else None
 
-        return "No products found in search results."
+            return {"price": price.text if price else "Not available", "link": product_link}
+
+        return {"price": "No products found", "link": None}
+
     except requests.RequestException as e:
         logger.error(f"Error fetching data from BestBuy: {e}")
-
-        return "Error fetching data from BestBuy."
+        return {"price": "Error fetching data from BestBuy.", "link": None}
 
 
 def fetch_data_from_walmart(product_name):
@@ -106,10 +109,9 @@ def fetch_data_from_walmart(product_name):
     logger.info(f"Walmart URL: {url}")
 
     try:
-        page_to_scrape = requests.get(url, headers=headers)
-
-        if page_to_scrape.status_code == 200:
-            soup = BeautifulSoup(page_to_scrape.text, "html.parser")
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, "html.parser")
             error_message = soup.find('div', class_='tc fw7 f-subheadline-m mb4 f1')
 
             if error_message is None:
@@ -120,14 +122,44 @@ def fetch_data_from_walmart(product_name):
                 if product_page_response.status_code == 200:
                     soup = BeautifulSoup(product_page_response.text, "html.parser")
                     price_text = soup.find('span', attrs={"itemprop": "price", "aria-hidden": "false"})
-                    return price_text.text.strip()
+                    return {"price": price_text.text.strip() if price_text else "Not available",
+                            "link": product_link}
 
-        return "No products found in search results."
+                    # return price_text.text.strip()
+
+            # price_element = soup.find('span', attrs={"itemprop": "price"})
+            # product_link_element = soup.find('a', class_='product-link')
+            # product_link = urljoin(url, product_link_element['href']) if product_link_element else None
+            # return {"price": price_element.text.strip() if price_element else "Not available", "link": product_link}
+
+        return {"price": "No products found", "link": None}
 
     except requests.RequestException as e:
         logger.error(f"Error fetching data from Walmart: {e}")
+        return {"price": "Error fetching data", "link": None}
 
-        return "Error fetching data from Walmart."
+    #     page_to_scrape = requests.get(url, headers=headers)
+    #
+    #     if page_to_scrape.status_code == 200:
+    #         soup = BeautifulSoup(page_to_scrape.text, "html.parser")
+    #         error_message = soup.find('div', class_='tc fw7 f-subheadline-m mb4 f1')
+    #
+    #         if error_message is None:
+    #             product_link = soup.find('div', class_='h-100 pb1-xl pr4-xl pv1 ph1',
+    #                                      attrs={"style": "contain-intrinsic-size:198px 340px"}).find('a')['href']
+    #             product_page_response = requests.get(product_link, headers=headers)
+    #
+    #             if product_page_response.status_code == 200:
+    #                 soup = BeautifulSoup(product_page_response.text, "html.parser")
+    #                 price_text = soup.find('span', attrs={"itemprop": "price", "aria-hidden": "false"})
+    #                 return price_text.text.strip()
+    #
+    #     return "No products found in search results."
+    #
+    # except requests.RequestException as e:
+    #     logger.error(f"Error fetching data from Walmart: {e}")
+    #
+    #     return "Error fetching data from Walmart."
 
 
 def fetch_data_from_newegg(product_name):
@@ -139,12 +171,10 @@ def fetch_data_from_newegg(product_name):
     logger.info(f"Newegg URL: {url}")
 
     try:
-        page_to_scrape = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers)
 
-        # Check if the request was successful
-        if page_to_scrape.status_code == 200:
-            # Find the HTML element representing the first product listing
-            soup = BeautifulSoup(page_to_scrape.text, "html.parser")
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, "html.parser")
             error_message = soup.find("span", class_='result-message-error')
 
             if error_message is None:
@@ -154,14 +184,37 @@ def fetch_data_from_newegg(product_name):
                 if product_page_response.status_code == 200:
                     soup = BeautifulSoup(product_page_response.text, "html.parser")
                     product_price = soup.find('li', class_='price-current')
-                    return product_price.text
+                    return {"price": product_price.text if product_price else "Not available", "link": product_link}
 
-            return "No products found in search results."
+                # price_element = soup.find('li', class_='price-current')
+                # link_element = soup.find('a', class_='item-title')
+                # product_link = urljoin(url, link_element['href']) if link_element else None
+                # return {"price": price_element.text if price_element else "Not available", "link": product_link}
+
+            return {"price": "No products found", "link": None}
 
     except requests.RequestException as e:
         logger.error(f"Error fetching data from Newegg: {e}")
-        return "Error fetching data from Newegg."
+        return {"price": "Error fetching data", "link": None}
 
+    #     page_to_scrape = requests.get(url, headers=headers)
+    #
+    #     # Check if the request was successful
+    #     if page_to_scrape.status_code == 200:
+    #         # Find the HTML element representing the first product listing
+    #         soup = BeautifulSoup(page_to_scrape.text, "html.parser")
+    #         error_message = soup.find("span", class_='result-message-error')
+    #
+    #         if error_message is None:
+    #             product_link = soup.find('div', class_='item-container').find('a')['href']
+    #             product_page_response = requests.get(product_link, headers=headers)
+    #
+    #             if product_page_response.status_code == 200:
+    #                 soup = BeautifulSoup(product_page_response.text, "html.parser")
+    #                 product_price = soup.find('li', class_='price-current')
+    #                 return product_price.text
+    #
+    #         return "No products found in search results."
 
 # Example usage:
 #product_name = "Sony XR85X93L 85\" 4K Mini LED Smart Google TV with PS5 Features (2023)"
