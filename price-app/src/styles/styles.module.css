@@ -1,14 +1,16 @@
+
 .container {
   width: 80%;
   margin: auto;
   padding: 20px;
+  font-family: sans-serif;
 }
 
 .header {
   font-size: 24px; /* Sets the font size to 24 pixels */
   color: #333; /* Dark gray text color */
-  margin-top: 20px; /* Adds space above the header */
-  margin-bottom: 10px; /* Adds space below the header */
+  margin-top: 70px; /* Adds space above the header */
+  margin-bottom: 30px; /* Adds space below the header */
   font-weight: bold; /* Makes the font bold */
   text-align: center; /* Centers the text */
 }
@@ -58,4 +60,12 @@
 
 .link {
   color: #007BFF;
+}
+
+.bestPrice {
+  font-size: 20px; /* Larger font size for emphasis */
+  color: #4CAF50; /* A green color to highlight the best price */
+  margin-top: 30px; /* Space above the summary line */
+  font-weight: bold; /* Bold font for better visibility */
+  text-align: center; /* Centering the text to align with the table and headers */
 }
