@@ -22,7 +22,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
-)
+# )
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux i686; rv:110.0) Gecko/20100101 Firefox/110.0. (compatible; FastAPI)',
@@ -127,14 +127,16 @@ def fetch_data_from_walmart(product_name):
                     # print(price)
                     if (price[:3] == "Now"):
                         price = price[4:]
-
+                    # print("price after the first if: " + price)
                     if (price[-3] != "."):
                         price = price[:-2] + "." + price[-2:]
                         # print("new: " + price)
 
-                        return {"price": price.strip() if price else "Not available",
+                        # return {"price": price.strip() if price else "Not available",
+                        #     "link": product_link}
+
+                return {"price": price.strip() if price else "Not available",
                             "link": product_link}
-                    # print("original: " + price)
 
         return {"price": "No products found", "link": None}
 
@@ -174,11 +176,12 @@ def fetch_data_from_newegg(product_name):
         return {"price": "Error fetching data", "link": None}
 
 
-# Example usage:
-#product_name = "Sony XR85X93L 85\" 4K Mini LED Smart Google TV with PS5 Features (2023)"
+# # Example usage:
+# product_name = "Sony XR85X93L 85\" 4K Mini LED Smart Google TV with PS5 Features (2023)"
 #product_name = "HP - Envy 2-in-1 14\" Full HD Touch-Screen Laptop - Intel Core 7 - 16GB Memory - 512GB SSD -Natural Silver"
 # product_name = "Sony - WF-C700N Truly Wireless Noise Canceling In-Ear Headphones - Sage"
 #product_name = "Barakkat Rouge 540 by Fragrance World EDP Spray 3.4 oz For Women"
 #product_name = "33234454"
 
-# fetch_data_from_walmart(product_name)
+# a = fetch_data_from_walmart(product_name)
+# print(a)
