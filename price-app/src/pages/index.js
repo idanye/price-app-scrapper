@@ -50,24 +50,31 @@ export default function Home() {
       {error && <p className={styles.error}>{error}</p>}
 
       {results && (
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th className={styles.th}>Store</th>
-              <th className={styles.th}>Price</th>
-              <th className={styles.th}>Link</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.keys(results).map(store => (
-              <tr key={store}>
-                <td className={styles.td}>{store}</td>
-                <td className={styles.td}>{results[store].price || 'Not available'}</td>
-                <td className={styles.td}>{results[store].link ? <a className={styles.link} href={results[store].link}>Product Link</a> : 'N/A'}</td>
+         <>
+          <h2 className={styles.header}>{productName}</h2>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th className={styles.th}>Store</th>
+                <th className={styles.th}>Price</th>
+                <th className={styles.th}>Link</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {Object.keys(results).filter(key => key !== 'product_name').map(store => (
+                <tr key={store}>
+                  <td className={styles.td}>{store}</td>
+                  <td className={styles.td}>{results[store].price || 'Not available'}</td>
+                  <td className={styles.td}>
+                    {results[store].link
+                      ? <a className={styles.link} href={results[store].link} target="_blank" rel="noopener noreferrer">Product Link</a>
+                      : 'N/A'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
       )}
     </div>
   );

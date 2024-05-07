@@ -4,6 +4,15 @@
   padding: 20px;
 }
 
+.header {
+  font-size: 24px; /* Sets the font size to 24 pixels */
+  color: #333; /* Dark gray text color */
+  margin-top: 20px; /* Adds space above the header */
+  margin-bottom: 10px; /* Adds space below the header */
+  font-weight: bold; /* Makes the font bold */
+  text-align: center; /* Centers the text */
+}
+
 .searchBar {
   display: flex;
   justify-content: space-between;
