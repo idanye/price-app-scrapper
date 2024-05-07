@@ -121,8 +121,13 @@ def fetch_data_from_walmart(product_name):
 
                 if product_page_response.status_code == 200:
                     soup = BeautifulSoup(product_page_response.text, "html.parser")
-                    price_text = soup.find('span', attrs={"itemprop": "price", "aria-hidden": "false"})
-                    return {"price": price_text.text.strip() if price_text else "Not available",
+                    price = soup.find('span', attrs={"itemprop": "price", "aria-hidden": "false"})
+                    price_text = price.text[3:]
+
+                    if (price_text[-3] != "."):
+                        price_text = price_text[:-2] + "." + price_text[-2:]
+
+                    return {"price": price_text.strip() if price_text else "Not available",
                             "link": product_link}
 
         return {"price": "No products found", "link": None}
@@ -163,8 +168,8 @@ def fetch_data_from_newegg(product_name):
         return {"price": "Error fetching data", "link": None}
 
 
-# Example usage:
-#product_name = "Sony XR85X93L 85\" 4K Mini LED Smart Google TV with PS5 Features (2023)"
+# # Example usage:
+# product_name = "Sony XR85X93L 85\" 4K Mini LED Smart Google TV with PS5 Features (2023)"
 # product_name = "HP - Envy 2-in-1 14\" Full HD Touch-Screen Laptop - Intel Core 7 - 16GB Memory - 512GB SSD -Natural Silver"
 #product_name = "Sony - WF-C700N Truly Wireless Noise Canceling In-Ear Headphones - Sage"
 #product_name = "Barakkat Rouge 540 by Fragrance World EDP Spray 3.4 oz For Women"
