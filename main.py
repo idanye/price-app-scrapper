@@ -85,8 +85,10 @@ def fetch_data_from_bestbuy(product_name):
             link = soup.find('a', class_='link')
             product_container = soup.find('div', class_='sku-title')
             link = product_container.find('a', href=True) if product_container else None
+            # print(link)
             product_link = urljoin(url, link['href']) if link else None
-
+            # print()
+            # print(product_link)
             return {"price": price.text if price else "Not available", "link": product_link}
 
         return {"price": "No products found", "link": None}
@@ -121,14 +123,18 @@ def fetch_data_from_walmart(product_name):
 
                 if product_page_response.status_code == 200:
                     soup = BeautifulSoup(product_page_response.text, "html.parser")
-                    price = soup.find('span', attrs={"itemprop": "price", "aria-hidden": "false"})
-                    price_text = price.text[3:]
+                    price = soup.find('span', attrs={"itemprop": "price", "aria-hidden": "false"}).text
+                    # print(price)
+                    if (price[:3] == "Now"):
+                        price = price[4:]
 
-                    if (price_text[-3] != "."):
-                        price_text = price_text[:-2] + "." + price_text[-2:]
+                    if (price[-3] != "."):
+                        price = price[:-2] + "." + price[-2:]
+                        # print("new: " + price)
 
-                    return {"price": price_text.strip() if price_text else "Not available",
+                        return {"price": price.strip() if price else "Not available",
                             "link": product_link}
+                    # print("original: " + price)
 
         return {"price": "No products found", "link": None}
 
@@ -168,9 +174,11 @@ def fetch_data_from_newegg(product_name):
         return {"price": "Error fetching data", "link": None}
 
 
-# # Example usage:
-# product_name = "Sony XR85X93L 85\" 4K Mini LED Smart Google TV with PS5 Features (2023)"
-# product_name = "HP - Envy 2-in-1 14\" Full HD Touch-Screen Laptop - Intel Core 7 - 16GB Memory - 512GB SSD -Natural Silver"
-#product_name = "Sony - WF-C700N Truly Wireless Noise Canceling In-Ear Headphones - Sage"
+# Example usage:
+#product_name = "Sony XR85X93L 85\" 4K Mini LED Smart Google TV with PS5 Features (2023)"
+#product_name = "HP - Envy 2-in-1 14\" Full HD Touch-Screen Laptop - Intel Core 7 - 16GB Memory - 512GB SSD -Natural Silver"
+# product_name = "Sony - WF-C700N Truly Wireless Noise Canceling In-Ear Headphones - Sage"
 #product_name = "Barakkat Rouge 540 by Fragrance World EDP Spray 3.4 oz For Women"
 #product_name = "33234454"
+
+# fetch_data_from_walmart(product_name)
