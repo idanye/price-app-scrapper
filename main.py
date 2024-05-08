@@ -22,7 +22,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
-# )
+)
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux i686; rv:110.0) Gecko/20100101 Firefox/110.0. (compatible; FastAPI)',
@@ -75,28 +75,31 @@ def fetch_data_from_bestbuy(product_name):
     encoded_product_name = urllib.parse.quote_plus(product_name[:90])
     url = f"https://www.bestbuy.com/site/searchpage.jsp?st={encoded_product_name}&intl=nosplash"
     logger.info(f"BestBuy URL: {url}")
-
     try:
         response = requests.get(url, headers=headers)
 
         if response.status_code == 200:
             soup = BeautifulSoup(response.text, "html.parser")
-            price = soup.find("span", attrs={"aria-hidden": "true"}, string=re.compile(r'^\$'))
-            link = soup.find('a', class_='link')
-            product_container = soup.find('div', class_='sku-title')
-            link = product_container.find('a', href=True) if product_container else None
-            # print(link)
-            product_link = urljoin(url, link['href']) if link else None
-            # print()
-            # print(product_link)
-            return {"price": price.text if price else "Not available", "link": product_link}
+            error_container = soup.find('div', class_="no-results-copy")
+
+            if error_container is None:
+                product_container = soup.find('li', class_='sku-item')
+                relative_url = product_container.find('a')['href']
+                full_url = urljoin("https://www.bestbuy.com", relative_url)
+                product_page_response = requests.get(full_url, headers=headers)
+                
+                if product_page_response.status_code == 200:
+                    soup = BeautifulSoup(product_page_response.text, "html.parser")
+                    price = soup.find("span", attrs={"aria-hidden": "true"}, string=re.compile(r'^\$'))
+
+                    return {"price": price.text if price else "Not available", "link": full_url}
 
         return {"price": "No products found", "link": None}
 
     except requests.RequestException as e:
         logger.error(f"Error fetching data from BestBuy: {e}")
         return {"price": "Error fetching data from BestBuy.", "link": None}
-
+    
 
 def fetch_data_from_walmart(product_name):
     encoded_product_name = urllib.parse.quote_plus(product_name)
@@ -124,16 +127,10 @@ def fetch_data_from_walmart(product_name):
                 if product_page_response.status_code == 200:
                     soup = BeautifulSoup(product_page_response.text, "html.parser")
                     price = soup.find('span', attrs={"itemprop": "price", "aria-hidden": "false"}).text
-                    # print(price)
                     if (price[:3] == "Now"):
                         price = price[4:]
-                    # print("price after the first if: " + price)
                     if (price[-3] != "."):
                         price = price[:-2] + "." + price[-2:]
-                        # print("new: " + price)
-
-                        # return {"price": price.strip() if price else "Not available",
-                        #     "link": product_link}
 
                 return {"price": price.strip() if price else "Not available",
                             "link": product_link}
@@ -176,12 +173,12 @@ def fetch_data_from_newegg(product_name):
         return {"price": "Error fetching data", "link": None}
 
 
-# # Example usage:
-# product_name = "Sony XR85X93L 85\" 4K Mini LED Smart Google TV with PS5 Features (2023)"
+# Example usage:
+#product_name = "Sony XR85X93L 85\" 4K Mini LED Smart Google TV with PS5 Features (2023)"
 #product_name = "HP - Envy 2-in-1 14\" Full HD Touch-Screen Laptop - Intel Core 7 - 16GB Memory - 512GB SSD -Natural Silver"
-# product_name = "Sony - WF-C700N Truly Wireless Noise Canceling In-Ear Headphones - Sage"
+#product_name = "Sony - WF-C700N Truly Wireless Noise Canceling In-Ear Headphones - Sage"
 #product_name = "Barakkat Rouge 540 by Fragrance World EDP Spray 3.4 oz For Women"
 #product_name = "33234454"
 
-# a = fetch_data_from_walmart(product_name)
+# a = fetch_data_from_bestbuy(product_name)
 # print(a)
